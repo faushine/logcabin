@@ -1,0 +1,41 @@
+1. Leader election:
+
+candidate启动一次投票 RaftConsensus::startNewElection
+
+向其它服务器发送投票请求 RaftConsensus::requestVote
+
+服务器处理投票请求 RaftConsensus::handleRequestVote
+
+所有的server更新leader信息 RaftConsensus::becomeLeader
+
+2. Log replication:
+
+leader让follower追加日志 RaftConsensus::appendEntries
+
+follower处理更新日志 RaftConsensus::handleAppendEntries
+
+可提交状态的更新 RaftConsensus::advanceCommitIndex
+
+应用日志, 将已经提交的日志逐个引用到状态机中 StateMachine::applyThreadMain
+
+# include <time.h>
+
+#define BILLION 1000000000L
+
+void printTimeElapsed(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+        long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+        long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+        std::cout<<"============================"+msg+"============================"<<std::endl;
+        std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+    }
+
+// timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
+
+    clock_gettime(clk_id, &tp_end);
+        printTimeElapsed(tp_start, tp_end, "startNewElection");

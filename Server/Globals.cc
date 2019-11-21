@@ -173,6 +173,7 @@ Globals::init()
         }
         raft->serverAddresses = listenAddressesStr;
         raft->init();
+        NOTICE("######## Init Done #########");
     }
 
     if (!stateMachine) {

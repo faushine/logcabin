@@ -1,0 +1,4 @@
+docker exec -it 525d9bc66903 bash
+
+##docker run -it -v /Users/faushine/Documents/logcabin:/logcabin logcabin:latest bash
+

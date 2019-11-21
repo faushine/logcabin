@@ -21,6 +21,10 @@
 #include <LogCabin/Debug.h>
 #include <LogCabin/Util.h>
 
+# include <time.h>
+
+#define BILLION 1000000000L
+
 namespace {
 
 using LogCabin::Client::Cluster;
@@ -151,9 +155,17 @@ class OptionParser {
 
 } // anonymous namespace
 
+void printTimeElapsedH(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+    long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+    long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+    std::cout<<"============================"+msg+"============================"<<std::endl;
+    std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+}
+
 int
 main(int argc, char** argv)
 {
+
     try {
 
         OptionParser options(argc, argv);
@@ -163,11 +175,25 @@ main(int argc, char** argv)
         Cluster cluster(options.cluster);
         Tree tree = cluster.getTree();
         tree.setTimeout(options.timeout);
-        tree.makeDirectoryEx("/etc");
+//        tree.makeDirectoryEx("/etc");
+
+        // timer
+        struct timespec tp_start, tp_end;
+        long time_elapsed_sec;
+        long time_elapsed_nsec;
+        clockid_t clk_id = CLOCK_MONOTONIC;
+        clock_gettime(clk_id, &tp_start);
+
         tree.writeEx("/etc/passwd", "ha");
-        std::string contents = tree.readEx("/etc/passwd");
-        assert(contents == "ha");
-        tree.removeDirectoryEx("/etc");
+
+        clock_gettime(clk_id, &tp_end);
+        printTimeElapsedH(tp_start, tp_end, "HelloWorld");
+
+//        std::string contents = tree.readEx("/etc/passwd");
+//
+//        std::cout<<"contents:"<<contents<<std::endl;
+//        assert(contents == "ha");
+//        tree.removeDirectoryEx("/etc");
         return 0;
 
     } catch (const LogCabin::Client::Exception& e) {

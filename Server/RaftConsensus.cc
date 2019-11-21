@@ -1259,11 +1259,25 @@ RaftConsensus::getSnapshotStats() const
     return s;
 }
 
+void printTimeElapsed(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+            long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+            long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+//            std::cout<<"============================"+msg+"============================"<<std::endl;
+//            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+}
+
 void
 RaftConsensus::handleAppendEntries(
                     const Protocol::Raft::AppendEntries::Request& request,
                     Protocol::Raft::AppendEntries::Response& response)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     std::lock_guard<Mutex> lockGuard(mutex);
     assert(!exiting);
 
@@ -1424,6 +1438,9 @@ RaftConsensus::handleAppendEntries(
     // long disk writes
     setElectionTimer();
     withholdVotesUntil = Clock::now() + ELECTION_TIMEOUT;
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "handleAppendEntries");
 }
 
 void
@@ -1527,6 +1544,13 @@ RaftConsensus::handleRequestVote(
                     const Protocol::Raft::RequestVote::Request& request,
                     Protocol::Raft::RequestVote::Response& response)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     std::lock_guard<Mutex> lockGuard(mutex);
     assert(!exiting);
 
@@ -1579,6 +1603,8 @@ RaftConsensus::handleRequestVote(
     response.set_granted(request.term() == currentTerm &&
                          votedFor == request.server_id());
     response.set_log_ok(logIsOk);
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "handleRequestVote");
 }
 
 std::pair<RaftConsensus::ClientResult, uint64_t>
@@ -2173,6 +2199,14 @@ RaftConsensus::stepDownThreadMain()
 void
 RaftConsensus::advanceCommitIndex()
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
+
     if (state != State::LEADER) {
         // getMatchIndex is undefined unless we're leader
         WARNING("advanceCommitIndex called as %s",
@@ -2220,6 +2254,8 @@ RaftConsensus::advanceCommitIndex()
             return;
         }
     }
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "advanceCommitIndex");
 }
 
 void
@@ -2249,6 +2285,13 @@ void
 RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
                              Peer& peer)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     uint64_t lastLogIndex = log->getLastLogIndex();
     uint64_t prevLogIndex = peer.nextIndex - 1;
     assert(prevLogIndex <= lastLogIndex);
@@ -2381,6 +2424,8 @@ RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
             stateChanged.notify_all();
         }
     }
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "AppendEntries");
 }
 
 void
@@ -2492,6 +2537,13 @@ RaftConsensus::installSnapshot(std::unique_lock<Mutex>& lockGuard,
 void
 RaftConsensus::becomeLeader()
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     assert(state == State::CANDIDATE);
     NOTICE("Now leader for term %lu (appending no-op at index %lu)",
            currentTerm,
@@ -2525,6 +2577,9 @@ RaftConsensus::becomeLeader()
 
     // Outstanding RequestVote RPCs are no longer needed.
     interruptAll();
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "becomeLeader");
 }
 
 void
@@ -2761,6 +2816,13 @@ RaftConsensus::replicateEntry(Log::Entry& entry,
 void
 RaftConsensus::requestVote(std::unique_lock<Mutex>& lockGuard, Peer& peer)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     Protocol::Raft::RequestVote::Request request;
     request.set_server_id(serverId);
     request.set_term(currentTerm);
@@ -2816,6 +2878,8 @@ RaftConsensus::requestVote(std::unique_lock<Mutex>& lockGuard, Peer& peer)
                    peer.serverId, currentTerm);
         }
     }
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "RequestVote");
 }
 
 void
@@ -2854,9 +2918,17 @@ RaftConsensus::printElectionState() const
            votedFor);
 }
 
+
 void
 RaftConsensus::startNewElection()
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
     if (configuration->id == 0) {
         // Don't have a configuration: go back to sleep.
         setElectionTimer();
@@ -2901,6 +2973,9 @@ RaftConsensus::startNewElection()
     // if we're the only server, this election is already done
     if (configuration->quorumAll(&Server::haveVote))
         becomeLeader();
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed(tp_start, tp_end, "startNewElection");
 }
 
 void

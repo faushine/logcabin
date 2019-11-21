@@ -25,6 +25,11 @@
 #include "RPC/ClientRPC.h"
 #include "RPC/ClientSession.h"
 
+# include <time.h>
+
+#define BILLION 1000000000L
+
+
 namespace LogCabin {
 namespace Client {
 
@@ -757,6 +762,13 @@ ClientImpl::removeDirectory(const std::string& path,
     return Result();
 }
 
+void printTimeElapsedC(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+            long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+            long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+            std::cout<<"============================"+msg+"============================"<<std::endl;
+            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+}
+
 Result
 ClientImpl::write(const std::string& path,
                   const std::string& workingDirectory,
@@ -764,6 +776,15 @@ ClientImpl::write(const std::string& path,
                   const Condition& condition,
                   TimePoint timeout)
 {
+
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+    NOTICE("############ClientImpWrite##############");
+
     std::string realPath;
     Result result = canonicalize(path, workingDirectory, realPath);
     if (result.status != Status::OK)
@@ -775,11 +796,20 @@ ClientImpl::write(const std::string& path,
     request.mutable_write()->set_path(realPath);
     request.mutable_write()->set_contents(contents);
     Protocol::Client::ReadWriteTree::Response response;
+
+
     treeCall(*leaderRPC,
              request, response, timeout);
+
     exactlyOnceRPCHelper.doneWithRPC(request.exactly_once());
     if (response.status() != Protocol::Client::Status::OK)
         return treeError(response);
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsedC(tp_start, tp_end, "ClientImpWrite");
+    NOTICE("############ClientImpWriteDone##############");
+
+
     return Result();
 }
 

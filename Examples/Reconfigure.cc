@@ -42,7 +42,7 @@ class OptionParser {
     OptionParser(int& argc, char**& argv)
         : argc(argc)
         , argv(argv)
-        , cluster("logcabin:5254")
+        , cluster("logcabin:5244")
         , logPolicy("")
         , servers()
     {

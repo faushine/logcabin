@@ -34,6 +34,9 @@
 #include "Storage/Layout.h"
 #include "Storage/Log.h"
 #include "Storage/SnapshotFile.h"
+# include <time.h>
+
+#define BILLION 1000000000L
 
 #ifndef LOGCABIN_SERVER_RAFTCONSENSUS_H
 #define LOGCABIN_SERVER_RAFTCONSENSUS_H

@@ -187,6 +187,8 @@ StateMachine::waitForResponse(uint64_t logIndex,
     if (command.has_tree()) {
         const PC::ExactlyOnceRPCInfo& rpcInfo = command.tree().exactly_once();
         auto sessionIt = sessions.find(rpcInfo.client_id());
+        WARNING("Client %lu asking for response from RPC %lu",
+                rpcInfo.client_id(), rpcInfo.rpc_number());
         if (sessionIt == sessions.end()) {
             WARNING("Client %lu session expired but client still active",
                     rpcInfo.client_id());
@@ -209,10 +211,12 @@ StateMachine::waitForResponse(uint64_t logIndex,
         response = responseIt->second;
         return true;
     } else if (command.has_open_session()) {
+        std::cout<<"++++++++++++has_open_session+++++++++++"<<std::endl;
         response.mutable_open_session()->
             set_client_id(logIndex);
         return true;
     } else if (versionThen >= 2 && command.has_close_session()) {
+        std::cout<<"++++++++++++has_close_session+++++++++++++"<<std::endl;
         response.mutable_close_session(); // no fields to set
         return true;
     } else if (command.has_advance_version()) {

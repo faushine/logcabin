@@ -26,6 +26,10 @@
 #include "Server/Globals.h"
 #include "Server/StateMachine.h"
 
+# include <time.h>
+
+#define BILLION 1000000000L
+
 namespace LogCabin {
 namespace Server {
 
@@ -40,29 +44,57 @@ ClientService::~ClientService()
 {
 }
 
+void printTimeElapsed1(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+        long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+        long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+        std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+    std::cout<<"============================"+msg+"-end"+"============================"<<std::endl;
+}
+
 void
 ClientService::handleRPC(RPC::ServerRPC rpc)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+
+    std::string s = "";
+
     using Protocol::Client::OpCode;
 
     // Call the appropriate RPC handler based on the request's opCode.
     switch (rpc.getOpCode()) {
         case OpCode::GET_SERVER_INFO:
+            s = "GET_SERVER_INFO";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             getServerInfo(std::move(rpc));
             break;
         case OpCode::VERIFY_RECIPIENT:
+            s = "VERIFY_RECIPIENT";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             verifyRecipient(std::move(rpc));
             break;
         case OpCode::GET_CONFIGURATION:
+            s = "GET_CONFIGURATION";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             getConfiguration(std::move(rpc));
             break;
         case OpCode::SET_CONFIGURATION:
+            s = "SET_CONFIGURATION";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             setConfiguration(std::move(rpc));
             break;
         case OpCode::STATE_MACHINE_COMMAND:
+            s = "STATE_MACHINE_COMMAND";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             stateMachineCommand(std::move(rpc));
             break;
         case OpCode::STATE_MACHINE_QUERY:
+            s = "STATE_MACHINE_QUERY";
+            std::cout<<"============================"+s+"============================"<<std::endl;
             stateMachineQuery(std::move(rpc));
             break;
         default:
@@ -71,6 +103,8 @@ ClientService::handleRPC(RPC::ServerRPC rpc)
                     rpc.getOpCode());
             rpc.rejectInvalidRequest();
     }
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsed1(tp_start, tp_end, s);
 }
 
 std::string
@@ -148,13 +182,34 @@ ClientService::setConfiguration(RPC::ServerRPC rpc)
     rpc.reply(response);
 }
 
+void printTimeElapsedCs(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+            long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+            long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+            std::cout<<"============================"+msg+"============================"<<std::endl;
+            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+}
+
+
 void
 ClientService::stateMachineCommand(RPC::ServerRPC rpc)
 {
     PRELUDE(StateMachineCommand);
     Core::Buffer cmdBuffer;
     rpc.getRequest(cmdBuffer);
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    clock_gettime(clk_id, &tp_start);
+    NOTICE("############stateMachineCommand##############");
+
     std::pair<Result, uint64_t> result = globals.raft->replicate(cmdBuffer);
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsedCs(tp_start, tp_end, "ClientImpWrite");
+    NOTICE("############stateMachineCommandDone##############");
+
     if (result.first == Result::RETRY || result.first == Result::NOT_LEADER) {
         Protocol::Client::Error error;
         error.set_error_code(Protocol::Client::Error::NOT_LEADER);
