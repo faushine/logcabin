@@ -54,6 +54,7 @@ Reader::Reader(const Storage::Layout& storageLayout)
     , contents()
     , bytesRead(0)
 {
+    NOTICE("######## snapshot reader ########");
     file = FilesystemUtil::tryOpenFile(storageLayout.snapshotDir,
                                        "snapshot",
                                        O_RDONLY);

@@ -1,0 +1,23 @@
+2019-11-21 07:41:45.681495 Examples/HelloWorld.cc:198 in main() NOTICE[3854:thread 1]: ############ client start read ##############
+2019-11-21 07:41:45.681533 Client/ClientImpl.cc:828 in read() NOTICE[3854:thread 1]: ############ Client Read ##############
+2019-11-21 07:41:45.682356 Client/ClientImpl.cc:133 in treeCall() VERBOSE[3854:thread 1]: Calling read-only tree query with request:
+read {
+  path: "/etc/passwd"
+}
+2019-11-21 07:41:45.682521 RPC/Address.cc:172 in refresh() VERBOSE[3854:thread 1]: Running getaddrinfo for host 127.0.0.1 with port 5255
+2019-11-21 07:41:45.683027 RPC/Address.cc:220 in refresh() VERBOSE[3854:thread 1]: Result: 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)
+2019-11-21 07:41:45.683976 Client/LeaderRPC.cc:265 in getSession() VERBOSE[3854:thread 1]: Connecting to: 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)
+2019-11-21 07:41:45.686588 Client/LeaderRPC.cc:338 in reportRedirect() NOTICE[3854:thread 1]: Server [Active session to 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)] is not leader, will try suggested 127.0.0.1:5254 next (there have been 1 failed attempts during this outage)
+2019-11-21 07:41:45.687934 RPC/Address.cc:172 in refresh() VERBOSE[3854:thread 1]: Running getaddrinfo for host 127.0.0.1 with port 5254
+2019-11-21 07:41:45.688034 RPC/Address.cc:220 in refresh() VERBOSE[3854:thread 1]: Result: 127.0.0.1:5254 (resolved to 127.0.0.1:5254)
+2019-11-21 07:41:45.688172 Client/LeaderRPC.cc:265 in getSession() VERBOSE[3854:thread 1]: Connecting to: 127.0.0.1:5254 (resolved to 127.0.0.1:5254)
+2019-11-21 07:41:45.691548 Client/LeaderRPC.cc:359 in reportSuccess() NOTICE[3854:thread 1]: Successfully connected to leader [Active session to 127.0.0.1:5254 (resolved to 127.0.0.1:5254)] after 1 failures
+2019-11-21 07:41:45.691612 Client/ClientImpl.cc:145 in treeCall() VERBOSE[3854:thread 1]: Reply to read-only tree query:
+status: OK
+read {
+  contents: "ha"
+}
+========Client Read::::10126100========
+2019-11-21 07:41:45.691698 Client/ClientImpl.cc:847 in read() NOTICE[3854:thread 1]: ############ Client Read Done ##############
+========read::::10212200========
+2019-11-21 07:41:45.691740 Examples/HelloWorld.cc:208 in main() NOTICE[3854:thread 1]: ############ client end read ##############

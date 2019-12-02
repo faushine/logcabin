@@ -231,6 +231,7 @@ SegmentedLog::Sync::wait()
         FS::File f(op.fd, "-unknown-");
         switch (op.opCode) {
             case Op::WRITE: {
+                NOTICE("####### segmentedlog write #######");
                 ssize_t written = FS::write(op.fd,
                         op.writeData.getData(),
                         op.writeData.getLength());
@@ -490,6 +491,7 @@ SegmentedLog::~SegmentedLog()
 std::pair<uint64_t, uint64_t>
 SegmentedLog::append(const std::vector<const Entry*>& entries)
 {
+    NOTICE("######### Segment log append #########");
     Segment* openSegment = &getOpenSegment();
     uint64_t startIndex = openSegment->endIndex + 1;
     uint64_t index = startIndex;
@@ -568,6 +570,7 @@ SegmentedLog::append(const std::vector<const Entry*>& entries)
     currentSync->ops.emplace_back(openSegmentFile.fd, Sync::Op::FDATASYNC);
     currentSync->lastIndex = getLastLogIndex();
     checkInvariants();
+    NOTICE("######### Segment log append end #########");
     return {startIndex, getLastLogIndex()};
 }
 

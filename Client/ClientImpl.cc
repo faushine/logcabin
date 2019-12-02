@@ -184,8 +184,10 @@ treeCall(LeaderRPCBase& leaderRPC,
                 "tree command");
         status = LeaderRPC::Status::TIMEOUT;
     } else {
+        NOTICE("###### client find leader ######");
         status = leaderRPC.call(Protocol::Client::OpCode::STATE_MACHINE_COMMAND,
                                 crequest, cresponse, timeout);
+        NOTICE("###### client find leader done ######");
     }
 
     switch (status) {
@@ -765,8 +767,7 @@ ClientImpl::removeDirectory(const std::string& path,
 void printTimeElapsedC(struct timespec tp_start, struct timespec tp_end, std::string msg) {
             long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
             long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
-            std::cout<<"============================"+msg+"============================"<<std::endl;
-            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+            std::cout<<"========"<<msg+"::::"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
 }
 
 Result
@@ -783,7 +784,7 @@ ClientImpl::write(const std::string& path,
     long time_elapsed_nsec;
     clockid_t clk_id = CLOCK_MONOTONIC;
     clock_gettime(clk_id, &tp_start);
-    NOTICE("############ClientImpWrite##############");
+    NOTICE("############ Client Write ##############");
 
     std::string realPath;
     Result result = canonicalize(path, workingDirectory, realPath);
@@ -806,8 +807,8 @@ ClientImpl::write(const std::string& path,
         return treeError(response);
 
     clock_gettime(clk_id, &tp_end);
-    printTimeElapsedC(tp_start, tp_end, "ClientImpWrite");
-    NOTICE("############ClientImpWriteDone##############");
+    printTimeElapsedC(tp_start, tp_end, "Client Write");
+    NOTICE("############ Client Write Done ##############");
 
 
     return Result();

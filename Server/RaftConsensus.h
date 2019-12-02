@@ -1165,10 +1165,6 @@ class RaftConsensus {
     friend std::ostream& operator<<(std::ostream& os,
                                     const RaftConsensus& raft);
 
-  private:
-    /**
-     * See #state.
-     */
     enum class State {
         /**
          * A follower does not initiate RPCs. It becomes a candidate with
@@ -1176,14 +1172,14 @@ class RaftConsensus {
          * candidate/leader. This is the initial state for servers when they
          * start up.
          */
-        FOLLOWER,
+                FOLLOWER,
 
         /**
          * A candidate sends RequestVote RPCs in an attempt to become a leader.
          * It steps down to be a follower if it discovers a current leader, and
          * it becomes leader if it collects votes from a quorum.
          */
-        CANDIDATE,
+                CANDIDATE,
 
         /**
          * A leader sends AppendEntries RPCs to replicate its log onto followers.
@@ -1193,8 +1189,41 @@ class RaftConsensus {
          * communicate with a quorum, or if it is not part of the latest
          * committed configuration.
          */
-        LEADER,
+                LEADER,
     };
+
+    State getCurrentState();
+
+  private:
+    /**
+     * See #state.
+     */
+//    enum class State {
+//        /**
+//         * A follower does not initiate RPCs. It becomes a candidate with
+//         * startNewElection() when a timeout elapses without hearing from a
+//         * candidate/leader. This is the initial state for servers when they
+//         * start up.
+//         */
+//        FOLLOWER,
+//
+//        /**
+//         * A candidate sends RequestVote RPCs in an attempt to become a leader.
+//         * It steps down to be a follower if it discovers a current leader, and
+//         * it becomes leader if it collects votes from a quorum.
+//         */
+//        CANDIDATE,
+//
+//        /**
+//         * A leader sends AppendEntries RPCs to replicate its log onto followers.
+//         * It also sends heartbeats periodically during periods of inactivity
+//         * to delay its followers from becoming candidates. It steps down to be
+//         * a follower if it discovers a server with a higher term, if it can't
+//         * communicate with a quorum, or if it is not part of the latest
+//         * committed configuration.
+//         */
+//        LEADER,
+//    };
 
 
     //// The following private methods MUST acquire the lock.
@@ -1455,6 +1484,7 @@ class RaftConsensus {
      * Const except for unit tests.
      */
     uint64_t SOFT_RPC_SIZE_LIMIT;
+
 
   public:
     /**

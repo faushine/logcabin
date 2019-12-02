@@ -1,0 +1,26 @@
+2019-11-21 08:00:34.831044 Examples/HelloWorld.cc:189 in main() NOTICE[4010:thread 1]: ############ client start write ##############
+2019-11-21 08:00:34.831130 Client/ClientImpl.cc:785 in write() NOTICE[4010:thread 1]: ############ Client Write ##############
+2019-11-21 08:00:34.831286 RPC/Address.cc:172 in refresh() VERBOSE[4010:thread 1]: Running getaddrinfo for host 127.0.0.1 with port 5255
+2019-11-21 08:00:34.831475 RPC/Address.cc:220 in refresh() VERBOSE[4010:thread 1]: Result: 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)
+2019-11-21 08:00:34.831511 Client/LeaderRPC.cc:265 in getSession() VERBOSE[4010:thread 1]: Connecting to: 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)
+2019-11-21 08:00:34.833429 Client/LeaderRPC.cc:338 in reportRedirect() NOTICE[4010:thread 1]: Server [Active session to 127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256 (resolved to 127.0.0.1:5255)] is not leader, will try suggested 127.0.0.1:5254 next (there have been 1 failed attempts during this outage)
+2019-11-21 08:00:34.833793 RPC/Address.cc:172 in refresh() VERBOSE[4010:thread 1]: Running getaddrinfo for host 127.0.0.1 with port 5254
+2019-11-21 08:00:34.834011 RPC/Address.cc:220 in refresh() VERBOSE[4010:thread 1]: Result: 127.0.0.1:5254 (resolved to 127.0.0.1:5254)
+2019-11-21 08:00:34.834133 Client/LeaderRPC.cc:265 in getSession() VERBOSE[4010:thread 1]: Connecting to: 127.0.0.1:5254 (resolved to 127.0.0.1:5254)
+2019-11-21 08:00:34.837972 Client/LeaderRPC.cc:359 in reportSuccess() NOTICE[4010:thread 1]: Successfully connected to leader [Active session to 127.0.0.1:5254 (resolved to 127.0.0.1:5254)] after 1 failures
+2019-11-21 08:00:34.839249 Client/ClientImpl.cc:177 in treeCall() VERBOSE[4010:thread 1]: Calling read-write tree command with request:
+write {
+  path: "/etc/passwd"
+  contents: "ha"
+}
+exactly_once {
+  client_id: 9607
+  first_outstanding_rpc: 1
+  rpc_number: 1
+}
+2019-11-21 08:00:34.852063 Client/ClientImpl.cc:196 in treeCall() VERBOSE[4010:thread 1]: Reply to read-write tree command:
+status: OK
+========Client Write::::21012700========
+2019-11-21 08:00:34.852172 Client/ClientImpl.cc:809 in write() NOTICE[4010:thread 1]: ############ Client Write Done ##############
+2019-11-21 08:00:34.852197 Examples/HelloWorld.cc:192 in main() NOTICE[4010:thread 1]: ############ client end write ##############
+========client write::::21129900========

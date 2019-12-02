@@ -39,8 +39,8 @@ RaftService::~RaftService()
 void printTimeElapsed2(struct timespec tp_start, struct timespec tp_end, std::string msg) {
         long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
         long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
-        std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
-    std::cout<<"============================"+msg+"============================"<<std::endl;
+//        std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+//    std::cout<<"============================"+msg+"============================"<<std::endl;
 }
 
 void

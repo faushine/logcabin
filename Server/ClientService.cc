@@ -28,7 +28,7 @@
 
 # include <time.h>
 
-#define BILLION 1000000000L
+#define BILLION 1000000L
 
 namespace LogCabin {
 namespace Server {
@@ -47,8 +47,9 @@ ClientService::~ClientService()
 void printTimeElapsed1(struct timespec tp_start, struct timespec tp_end, std::string msg) {
         long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
         long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
-        std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
-    std::cout<<"============================"+msg+"-end"+"============================"<<std::endl;
+        std::cout<<msg<<std::endl;
+        NOTICE("done");
+        std::cout<<"========"<<msg+":::::"<<(time_elapsed_nsec/1000)<<" us ========"<<std::endl;
 }
 
 void
@@ -69,32 +70,32 @@ ClientService::handleRPC(RPC::ServerRPC rpc)
     switch (rpc.getOpCode()) {
         case OpCode::GET_SERVER_INFO:
             s = "GET_SERVER_INFO";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================GET_SERVER_INFO============================");
             getServerInfo(std::move(rpc));
             break;
         case OpCode::VERIFY_RECIPIENT:
             s = "VERIFY_RECIPIENT";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================VERIFY_RECIPIENT============================");
             verifyRecipient(std::move(rpc));
             break;
         case OpCode::GET_CONFIGURATION:
             s = "GET_CONFIGURATION";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================GET_CONFIGURATION============================");
             getConfiguration(std::move(rpc));
             break;
         case OpCode::SET_CONFIGURATION:
             s = "SET_CONFIGURATION";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================SET_CONFIGURATION============================");
             setConfiguration(std::move(rpc));
             break;
         case OpCode::STATE_MACHINE_COMMAND:
             s = "STATE_MACHINE_COMMAND";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================STATE_MACHINE_COMMAND============================");
             stateMachineCommand(std::move(rpc));
             break;
         case OpCode::STATE_MACHINE_QUERY:
             s = "STATE_MACHINE_QUERY";
-            std::cout<<"============================"+s+"============================"<<std::endl;
+            NOTICE("============================STATE_MACHINE_QUERY============================");
             stateMachineQuery(std::move(rpc));
             break;
         default:
@@ -141,10 +142,18 @@ ClientService::getServerInfo(RPC::ServerRPC rpc)
 void
 ClientService::getConfiguration(RPC::ServerRPC rpc)
 {
+    // timer
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+
     PRELUDE(GetConfiguration);
     Protocol::Raft::SimpleConfiguration configuration;
     uint64_t id;
+
     Result result = globals.raft->getConfiguration(configuration, id);
+
     if (result == Result::RETRY || result == Result::NOT_LEADER) {
         Protocol::Client::Error error;
         error.set_error_code(Protocol::Client::Error::NOT_LEADER);
@@ -185,8 +194,7 @@ ClientService::setConfiguration(RPC::ServerRPC rpc)
 void printTimeElapsedCs(struct timespec tp_start, struct timespec tp_end, std::string msg) {
             long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
             long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
-            std::cout<<"============================"+msg+"============================"<<std::endl;
-            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+            std::cout<<"========"<<msg+":::::"<<(time_elapsed_nsec/1000)<<" us ========"<<std::endl;
 }
 
 
@@ -202,13 +210,13 @@ ClientService::stateMachineCommand(RPC::ServerRPC rpc)
     long time_elapsed_nsec;
     clockid_t clk_id = CLOCK_MONOTONIC;
     clock_gettime(clk_id, &tp_start);
-    NOTICE("############stateMachineCommand##############");
+    NOTICE("############ replicate ##############");
 
     std::pair<Result, uint64_t> result = globals.raft->replicate(cmdBuffer);
 
-    clock_gettime(clk_id, &tp_end);
-    printTimeElapsedCs(tp_start, tp_end, "ClientImpWrite");
-    NOTICE("############stateMachineCommandDone##############");
+    NOTICE("############ replicate done ##############");
+
+    NOTICE("############ find leader ##############");
 
     if (result.first == Result::RETRY || result.first == Result::NOT_LEADER) {
         Protocol::Client::Error error;
@@ -217,37 +225,112 @@ ClientService::stateMachineCommand(RPC::ServerRPC rpc)
         if (!leaderHint.empty())
             error.set_leader_hint(leaderHint);
         rpc.returnError(error);
+        NOTICE("############ find leader done ##############");
         return;
     }
     assert(result.first == Result::SUCCESS);
     uint64_t logIndex = result.second;
-    if (!globals.stateMachine->waitForResponse(logIndex, request, response)) {
+
+    NOTICE("############ waitForResponse ##############");
+
+    bool rep = globals.stateMachine->waitForResponse(logIndex, request, response);
+
+    NOTICE("############ waitForResponse done ##############");
+    if (!rep) {
         rpc.rejectInvalidRequest();
+        NOTICE("############ reject ##############");
         return;
     }
+    NOTICE("############ rely ##############");
     rpc.reply(response);
+    NOTICE("############ rely done ##############");
 }
 
 void
 ClientService::stateMachineQuery(RPC::ServerRPC rpc)
 {
     PRELUDE(StateMachineQuery);
-    std::pair<Result, uint64_t> result = globals.raft->getLastCommitIndex();
-    if (result.first == Result::RETRY || result.first == Result::NOT_LEADER) {
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+
+    RaftConsensus::State state = globals.raft->getCurrentState();
+
+    switch (state) {
+        case RaftConsensus::State::FOLLOWER:
+            NOTICE("############## State::FOLLOWER ##############");
+            break;
+        case RaftConsensus::State::CANDIDATE:
+            NOTICE("############## State::CANDIDATE ##############");
+            break;
+        case RaftConsensus::State::LEADER:
+            NOTICE("############## State::LEADER ##############");
+            break;
+    }
+
+
+    if(state==RaftConsensus::State::FOLLOWER || state==RaftConsensus::State::CANDIDATE){
+        NOTICE("############ NOT LEADER ##############");
+        clock_gettime(clk_id, &tp_start);
+
         Protocol::Client::Error error;
         error.set_error_code(Protocol::Client::Error::NOT_LEADER);
         std::string leaderHint = globals.raft->getLeaderHint();
         if (!leaderHint.empty())
             error.set_leader_hint(leaderHint);
         rpc.returnError(error);
+
+        clock_gettime(clk_id, &tp_end);
+        printTimeElapsedCs(tp_start, tp_end, "NOT LEADER");
+
         return;
     }
-    assert(result.first == Result::SUCCESS);
-    uint64_t logIndex = result.second;
-    globals.stateMachine->wait(logIndex);
-    if (!globals.stateMachine->query(request, response))
+
+    //------------ delete ----------------
+//    NOTICE("############ getLastCommitIndex ##############");
+//    clock_gettime(clk_id, &tp_start);
+//    std::pair<Result, uint64_t> result = globals.raft->getLastCommitIndex();
+//
+//    if (result.first == Result::RETRY || result.first == Result::NOT_LEADER) {
+//        Protocol::Client::Error error;
+//        error.set_error_code(Protocol::Client::Error::NOT_LEADER);
+//        std::string leaderHint = globals.raft->getLeaderHint();
+//        if (!leaderHint.empty())
+//            error.set_leader_hint(leaderHint);
+//        rpc.returnError(error);
+//        return;
+//    }
+//
+//    assert(result.first == Result::SUCCESS);
+//    uint64_t logIndex = result.second;
+//
+//    clock_gettime(clk_id, &tp_end);
+//    printTimeElapsedCs(tp_start, tp_end, "getLastCommitIndex");
+//
+//    NOTICE("############ wait ##############");
+//    clock_gettime(clk_id, &tp_start);
+//
+//    globals.stateMachine->wait(logIndex);
+//
+//    clock_gettime(clk_id, &tp_end);
+//    printTimeElapsedCs(tp_start, tp_end, "wait");
+    //------------ delete ----------------
+
+    NOTICE("############ query ##############");
+    clock_gettime(clk_id, &tp_start);
+    if (!globals.stateMachine->query(request, response)) {
+        NOTICE("############ can not query ############");
         rpc.rejectInvalidRequest();
+    }
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsedCs(tp_start, tp_end, "query");
+
+    NOTICE("############ reply ##############");
+    clock_gettime(clk_id, &tp_start);
     rpc.reply(response);
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsedCs(tp_start, tp_end, "reply");
 }
 
 void

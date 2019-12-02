@@ -1,0 +1,5 @@
+============================STATE_MACHINE_COMMAND============================
+2019-11-21 08:00:34.833001 Server/ClientService.cc:203 in stateMachineCommand() NOTICE[2:ClientService(11)]: ############ replicate ##############
+========replicate::::80400========
+2019-11-21 08:00:34.833080 Server/ClientService.cc:209 in stateMachineCommand() NOTICE[2:ClientService(11)]: ############ replicate Done ##############
+========STATE_MACHINE_COMMAND:::::771000========

@@ -1,4 +1,7 @@
-docker exec -it 525d9bc66903 bash
+docker exec -it 72bab1cfbb6d bash
 
-##docker run -it -v /Users/faushine/Documents/logcabin:/logcabin logcabin:latest bash
+##docker run -it --privileged -v /Users/faushine/Documents/logcabin:/logcabin logcabin:latest bash
 
+##apt-get install -y libc6-dbg gdb valgrind
+
+##set args --cluster=127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256

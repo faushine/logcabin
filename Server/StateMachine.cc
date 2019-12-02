@@ -165,8 +165,10 @@ void
 StateMachine::wait(uint64_t index) const
 {
     std::unique_lock<Core::Mutex> lockGuard(mutex);
-    while (lastApplied < index)
+    while (lastApplied < index){
+        NOTICE("######### lastApplied < index #######");
         entriesApplied.wait(lockGuard);
+    }
 }
 
 bool
@@ -175,8 +177,13 @@ StateMachine::waitForResponse(uint64_t logIndex,
                               Command::Response& response) const
 {
     std::unique_lock<Core::Mutex> lockGuard(mutex);
-    while (lastApplied < logIndex)
+
+
+    while (lastApplied < logIndex){
+        NOTICE("############ lastApplied %lu < logIndex %lu ##############",lastApplied, logIndex);
+
         entriesApplied.wait(lockGuard);
+    }
 
     // Need to check whether we understood the request at the time it
     // was applied using getVersion(logIndex), then reply and return true/false
@@ -185,9 +192,11 @@ StateMachine::waitForResponse(uint64_t logIndex,
     uint16_t versionThen = getVersion(logIndex);
 
     if (command.has_tree()) {
+        NOTICE("############ command has tree ##############");
+
         const PC::ExactlyOnceRPCInfo& rpcInfo = command.tree().exactly_once();
         auto sessionIt = sessions.find(rpcInfo.client_id());
-        WARNING("Client %lu asking for response from RPC %lu",
+        NOTICE("Client %lu asking for response to RPC %lu",
                 rpcInfo.client_id(), rpcInfo.rpc_number());
         if (sessionIt == sessions.end()) {
             WARNING("Client %lu session expired but client still active",
@@ -211,12 +220,12 @@ StateMachine::waitForResponse(uint64_t logIndex,
         response = responseIt->second;
         return true;
     } else if (command.has_open_session()) {
-        std::cout<<"++++++++++++has_open_session+++++++++++"<<std::endl;
+        NOTICE("############ command has open session ##############");
         response.mutable_open_session()->
             set_client_id(logIndex);
         return true;
     } else if (versionThen >= 2 && command.has_close_session()) {
-        std::cout<<"++++++++++++has_close_session+++++++++++++"<<std::endl;
+        NOTICE("############ command has close session ##############");
         response.mutable_close_session(); // no fields to set
         return true;
     } else if (command.has_advance_version()) {

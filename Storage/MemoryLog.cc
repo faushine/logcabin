@@ -45,11 +45,14 @@ MemoryLog::~MemoryLog()
 std::pair<uint64_t, uint64_t>
 MemoryLog::append(const std::vector<const Entry*>& newEntries)
 {
+    NOTICE("######### Memory log append #########");
+
     uint64_t firstIndex = startIndex + entries.size();
     uint64_t lastIndex = firstIndex + newEntries.size() - 1;
     for (auto it = newEntries.begin(); it != newEntries.end(); ++it)
         entries.push_back(**it);
     currentSync->lastIndex = lastIndex;
+    NOTICE("######### Memory log append end #########");
     return {firstIndex, lastIndex};
 }
 

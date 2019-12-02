@@ -30,12 +30,21 @@ void printTimeElapsed(struct timespec tp_start, struct timespec tp_end, std::str
     }
 
 // timer
-    struct timespec tp_start, tp_end;
-    long time_elapsed_sec;
-    long time_elapsed_nsec;
-    clockid_t clk_id = CLOCK_MONOTONIC;
-    clock_gettime(clk_id, &tp_start);
+     struct timespec tp_start, tp_end;
+     long time_elapsed_sec;
+     long time_elapsed_nsec;
+     clockid_t clk_id = CLOCK_MONOTONIC;
+
+     clock_gettime(clk_id, &tp_start);
+         NOTICE("############ replicate ##############");
+
+     clock_gettime(clk_id, &tp_end);
+         printTimeElapsedCs(tp_start, tp_end, "replicate");
 
 
-    clock_gettime(clk_id, &tp_end);
-        printTimeElapsed(tp_start, tp_end, "startNewElection");
+
+1 heart beat timeout - > reject all request
+
+2 leader not receives ack of heart beat -> become peer
+
+3 leader knows states

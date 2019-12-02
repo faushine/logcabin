@@ -1,0 +1,33 @@
+============================STATE_MACHINE_COMMAND============================
+2019-11-21 08:00:34.835181 Server/ClientService.cc:203 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate ##############
+========replicate::::2480400========
+2019-11-21 08:00:34.837686 Server/ClientService.cc:209 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.837713 Server/ClientService.cc:224 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse ##############
+2019-11-21 08:00:34.837730 Server/StateMachine.cc:221 in waitForResponse() NOTICE[1:ClientService(14)]: ############ command has open session ##############
+========replicate::::75700========
+2019-11-21 08:00:34.837815 Server/ClientService.cc:229 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.837829 Server/ClientService.cc:236 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse true ##############
+========STATE_MACHINE_COMMAND:::::2739000========
+
+============================STATE_MACHINE_COMMAND============================
+2019-11-21 08:00:34.840005 Server/ClientService.cc:203 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate ##############
+========replicate::::6712700========
+2019-11-21 08:00:34.846853 Server/ClientService.cc:209 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.846921 Server/ClientService.cc:224 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse ##############
+2019-11-21 08:00:34.848057 Server/StateMachine.cc:193 in waitForResponse() NOTICE[1:ClientService(14)]: ############ command has tree ##############
+2019-11-21 08:00:34.848181 Server/StateMachine.cc:198 in waitForResponse() NOTICE[1:ClientService(14)]: Client 9607 asking for response to RPC 1
+========replicate::::1353200========
+2019-11-21 08:00:34.848349 Server/ClientService.cc:229 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.850102 Server/ClientService.cc:236 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse true ##############
+========STATE_MACHINE_COMMAND:::::10583700========
+
+============================STATE_MACHINE_COMMAND============================
+2019-11-21 08:00:34.853207 Server/ClientService.cc:203 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate ##############
+========replicate::::6066600========
+2019-11-21 08:00:34.860749 Server/ClientService.cc:209 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.860979 Server/ClientService.cc:224 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse ##############
+2019-11-21 08:00:34.861071 Server/StateMachine.cc:226 in waitForResponse() NOTICE[1:ClientService(14)]: ############ command has close session ##############
+========replicate::::187000========
+2019-11-21 08:00:34.861187 Server/ClientService.cc:229 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ replicate Done ##############
+2019-11-21 08:00:34.863345 Server/ClientService.cc:236 in stateMachineCommand() NOTICE[1:ClientService(14)]: ############ waitForResponse true ##############
+========STATE_MACHINE_COMMAND:::::10524500========

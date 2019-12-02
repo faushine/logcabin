@@ -1,0 +1,9 @@
+============================STATE_MACHINE_QUERY============================
+2019-11-21 07:41:45.690230 Server/ClientService.cc:241 in stateMachineQuery() NOTICE[1:ClientService(14)]: ############ getLastCommitIndex ##############
+========getLastCommitIndex::::882700========
+2019-11-21 07:41:45.691112 Server/ClientService.cc:247 in stateMachineQuery() NOTICE[1:ClientService(14)]: ############ getLastCommitIndex Done ##############
+2019-11-21 07:41:45.691119 Server/ClientService.cc:261 in stateMachineQuery() NOTICE[1:ClientService(14)]: ############ wait ##############
+========wait::::7000========
+2019-11-21 07:41:45.691144 Server/ClientService.cc:268 in stateMachineQuery() NOTICE[1:ClientService(14)]: ############ wait done ##############
+2019-11-21 07:41:45.691167 Server/ClientService.cc:273 in stateMachineQuery() NOTICE[1:ClientService(14)]: ############ query Done ##############
+========STATE_MACHINE_QUERY:::::1012100========

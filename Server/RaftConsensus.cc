@@ -1262,8 +1262,7 @@ RaftConsensus::getSnapshotStats() const
 void printTimeElapsed(struct timespec tp_start, struct timespec tp_end, std::string msg) {
             long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
             long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
-//            std::cout<<"============================"+msg+"============================"<<std::endl;
-//            std::cout<<"========"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
+    std::cout<<"========"<<msg+"::::"<<(BILLION * time_elapsed_sec) + time_elapsed_nsec<<"========"<<std::endl;
 }
 
 void
@@ -1440,7 +1439,7 @@ RaftConsensus::handleAppendEntries(
     withholdVotesUntil = Clock::now() + ELECTION_TIMEOUT;
 
     clock_gettime(clk_id, &tp_end);
-    printTimeElapsed(tp_start, tp_end, "handleAppendEntries");
+//    printTimeElapsed(tp_start, tp_end, "handleAppendEntries");
 }
 
 void
@@ -2255,7 +2254,7 @@ RaftConsensus::advanceCommitIndex()
         }
     }
     clock_gettime(clk_id, &tp_end);
-    printTimeElapsed(tp_start, tp_end, "advanceCommitIndex");
+//    printTimeElapsed(tp_start, tp_end, "advanceCommitIndex");
 }
 
 void
@@ -2425,7 +2424,7 @@ RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
         }
     }
     clock_gettime(clk_id, &tp_end);
-    printTimeElapsed(tp_start, tp_end, "AppendEntries");
+//    printTimeElapsed(tp_start, tp_end, "AppendEntries");
 }
 
 void
@@ -2895,7 +2894,13 @@ RaftConsensus::setElectionTimer()
     stateChanged.notify_all();
 }
 
-void
+        RaftConsensus::State
+RaftConsensus::getCurrentState(){
+    return state;
+}
+
+
+        void
 RaftConsensus::printElectionState() const
 {
     const char* s = NULL;
