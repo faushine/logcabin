@@ -134,6 +134,8 @@ class Server {
      * Return the latest time this Server acknowledged our current term.
      */
     virtual uint64_t getLastAckEpoch() const = 0;
+
+    virtual uint64_t getLastTerm() const = 0;
     /**
      * Return the largest entry ID for which this Server is known to share the
      * same entries up to and including this entry with our log.
@@ -231,6 +233,7 @@ class LocalServer : public Server {
     uint64_t getMatchIndex() const;
     bool haveVote() const;
     uint64_t getLastAckEpoch() const;
+    uint64_t getLastTerm() const;
     void interrupt();
     bool isCaughtUp() const;
     void scheduleHeartbeat();
@@ -272,6 +275,7 @@ class Peer : public Server {
     void beginLeadership();
     void exit();
     uint64_t getLastAckEpoch() const;
+    uint64_t getLastTerm() const;
     uint64_t getMatchIndex() const;
     bool haveVote() const;
     bool isCaughtUp() const;
@@ -401,6 +405,9 @@ class Peer : public Server {
      * See #getLastAckEpoch().
      */
     uint64_t lastAckEpoch;
+
+
+    uint64_t currentTerm;
 
     /**
      * When the next heartbeat should be sent to the follower.
