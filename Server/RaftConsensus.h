@@ -1192,7 +1192,7 @@ class RaftConsensus {
                 LEADER,
     };
 
-    State getCurrentState();
+    std::pair<RaftConsensus::State, uint64_t> getCurrentState();
 
   private:
     /**

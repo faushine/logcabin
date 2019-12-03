@@ -34,7 +34,8 @@ Options:
 """
 
 from __future__ import print_function, division
-from common import sh, captureSh, Sandbox, smokehosts
+from common import sh, captureSh, Sandbox
+from config import smokehosts
 from docopt import docopt
 import os
 import random

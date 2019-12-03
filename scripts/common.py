@@ -42,10 +42,11 @@ def captureSh(command, **kwargs):
     kwargs['shell'] = True
     kwargs['stdout'] = subprocess.PIPE
     p = subprocess.Popen(command, **kwargs)
-    output = p.communicate()[0]
+    output = p.communicate()[0].decode("utf-8")
     if p.returncode:
         raise subprocess.CalledProcessError(p.returncode, command)
     if output.count('\n') and output[-1] == '\n':
+        print (output)
         return output[:-1]
     else:
         return output

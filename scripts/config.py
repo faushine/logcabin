@@ -68,7 +68,11 @@ os.environ['LD_LIBRARY_PATH'] = ':'.join(ld_library_path)
 # consists of a name for the host (for ssh), an IP address
 # to use for creating service locators. and an id for generating
 # Ethernet addresses.
-hosts = []
+hosts = [
+    ('192.168.2.1', '192.168.2.1', 1),
+    ('192.168.2.2', '192.168.2.2', 2),
+    ('192.168.2.3', '192.168.2.3', 3),
+]
 for i in range(1, 61):
     hosts.append(('rc%02d' % i,
                   '192.168.1.%d' % (100 + i),

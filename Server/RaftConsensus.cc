@@ -2894,9 +2894,9 @@ RaftConsensus::setElectionTimer()
     stateChanged.notify_all();
 }
 
-        RaftConsensus::State
+std::pair<RaftConsensus::State, uint64_t>
 RaftConsensus::getCurrentState(){
-    return state;
+    return {state, commitIndex};
 }
 
 

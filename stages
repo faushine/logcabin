@@ -43,7 +43,7 @@ void printTimeElapsed(struct timespec tp_start, struct timespec tp_end, std::str
 
 
 
-1 heart beat timeout - > reject all request
+1 heart beat timeout - > reject all request (yes
 
 2 leader not receives ack of heart beat -> become peer
 

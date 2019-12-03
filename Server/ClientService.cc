@@ -255,9 +255,9 @@ ClientService::stateMachineQuery(RPC::ServerRPC rpc)
     long time_elapsed_nsec;
     clockid_t clk_id = CLOCK_MONOTONIC;
 
-    RaftConsensus::State state = globals.raft->getCurrentState();
+    std::pair<RaftConsensus::State, uint64_t> result = globals.raft->getCurrentState();
 
-    switch (state) {
+    switch (result.first) {
         case RaftConsensus::State::FOLLOWER:
             NOTICE("############## State::FOLLOWER ##############");
             break;
@@ -270,7 +270,7 @@ ClientService::stateMachineQuery(RPC::ServerRPC rpc)
     }
 
 
-    if(state==RaftConsensus::State::FOLLOWER || state==RaftConsensus::State::CANDIDATE){
+    if(result.first == RaftConsensus::State::FOLLOWER || result.first == RaftConsensus::State::CANDIDATE){
         NOTICE("############ NOT LEADER ##############");
         clock_gettime(clk_id, &tp_start);
 
@@ -308,14 +308,16 @@ ClientService::stateMachineQuery(RPC::ServerRPC rpc)
 //    clock_gettime(clk_id, &tp_end);
 //    printTimeElapsedCs(tp_start, tp_end, "getLastCommitIndex");
 //
-//    NOTICE("############ wait ##############");
-//    clock_gettime(clk_id, &tp_start);
-//
-//    globals.stateMachine->wait(logIndex);
-//
-//    clock_gettime(clk_id, &tp_end);
-//    printTimeElapsedCs(tp_start, tp_end, "wait");
     //------------ delete ----------------
+
+    NOTICE("############ wait ##############");
+    clock_gettime(clk_id, &tp_start);
+
+    uint64_t logIndex = result.second;
+    globals.stateMachine->wait(logIndex);
+
+    clock_gettime(clk_id, &tp_end);
+    printTimeElapsedCs(tp_start, tp_end, "wait");
 
     NOTICE("############ query ##############");
     clock_gettime(clk_id, &tp_start);
