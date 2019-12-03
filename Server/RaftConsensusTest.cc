@@ -1326,6 +1326,21 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
     EXPECT_EQ(oldStartElectionAt, consensus->startElectionAt);
     EXPECT_EQ(0U, consensus->votedFor);
 
+    
+    Protocol::Raft::AppendEntries::Request request;
+    Protocol::Raft::AppendEntries::Response response;
+    request.set_server_id(3);
+    request.set_term(11);
+    request.set_prev_log_term(8);
+    request.set_prev_log_index(0);
+    request.set_commit_index(0);
+    consensus->handleAppendEntries(request, response);
+    EXPECT_EQ("term: 11 "
+    "success: false "
+    "last_log_index: 0"
+    "server_capabilities: {}",
+    response);
+    
     // as candidate, log is ok
     request.set_last_log_term(9);
     consensus->handleRequestVote(request, response);
@@ -1990,7 +2005,7 @@ TEST_F(ServerRaftConsensusPTest, peerThreadMain)
         "}");
     consensus->append({&entry5});
     std::shared_ptr<Peer> peer = getPeerRef(2);
-    peer->currentTerm=5;
+    
     consensus->stateChanged.callback = FollowerThreadMainHelper(*consensus,
                                                                 *peer);
     ++consensus->numPeerThreads;
@@ -2006,7 +2021,8 @@ TEST_F(ServerRaftConsensusPTest, peerThreadMain)
     vresponse.set_granted(true);
     peerService->reply(Protocol::Raft::OpCode::REQUEST_VOTE,
                        vrequest, vresponse);
-
+    
+    peer->currentTerm=consensus->currentTerm;
     // first appendEntries sends heartbeat (accept it)
     Protocol::Raft::AppendEntries::Request arequest;
     arequest.set_server_id(1);
