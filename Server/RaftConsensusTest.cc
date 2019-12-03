@@ -1326,20 +1326,20 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
     EXPECT_EQ(oldStartElectionAt, consensus->startElectionAt);
     EXPECT_EQ(0U, consensus->votedFor);
 
-    
-    Protocol::Raft::AppendEntries::Request request;
-    Protocol::Raft::AppendEntries::Response response;
-    request.set_server_id(3);
-    request.set_term(11);
-    request.set_prev_log_term(8);
-    request.set_prev_log_index(0);
-    request.set_commit_index(0);
-    consensus->handleAppendEntries(request, response);
+
+    Protocol::Raft::AppendEntries::Request arequest;
+    Protocol::Raft::AppendEntries::Response aresponse;
+    arequest.set_server_id(3);
+    arequest.set_term(11);
+    arequest.set_prev_log_term(8);
+    arequest.set_prev_log_index(0);
+    arequest.set_commit_index(0);
+    consensus->handleAppendEntries(arequest, aresponse);
     EXPECT_EQ("term: 11 "
     "success: false "
     "last_log_index: 0"
     "server_capabilities: {}",
-    response);
+    aresponse);
     
     // as candidate, log is ok
     request.set_last_log_term(9);
