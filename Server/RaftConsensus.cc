@@ -1321,7 +1321,7 @@ RaftConsensus::handleAppendEntries(
     stepDown(request.term());
     setElectionTimer();
     withholdVotesUntil = Clock::now() + ELECTION_TIMEOUT;
-
+    std::cout<<"appendentries++++++++++withholdVotesUntil:"<<withholdVotesUntil<<std::endl;
     // Record the leader ID as a hint for clients.
     if (leaderId == 0) {
         leaderId = request.server_id();
@@ -1551,8 +1551,12 @@ RaftConsensus::handleRequestVote(
     bool logIsOk = (request.last_log_term() > lastLogTerm ||
                     (request.last_log_term() == lastLogTerm &&
                      request.last_log_index() >= lastLogIndex));
-
+    std::cout<<"++++++++++withholdVotesUntil:"<<withholdVotesUntil<<std::endl;
+    std::cout<<"++++++++++now: "<<Clock::now()<<std::endl;
+    std::cout<<"currentTerm:"<<currentTerm<<std::endl;
     if (withholdVotesUntil > Clock::now()) {
+        std::cout<<"true "<<std::endl;
+        std::cout<<"currentTerm:"<<currentTerm<<std::endl;
         NOTICE("Rejecting RequestVote for term %lu from server %lu, since "
                "this server (which is in term %lu) recently heard from a "
                "leader (%lu). Should server %lu be shut down?",
@@ -2276,6 +2280,7 @@ RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
 
     if (configuration->quorumMin(&Server::getLastTerm) < currentTerm-2){
         stepDown(currentTerm);
+        return;
     }
 
     // Find prevLogTerm or fall back to sending a snapshot.
@@ -2825,8 +2830,7 @@ RaftConsensus::requestVote(std::unique_lock<Mutex>& lockGuard, Peer& peer)
     } else {
         peer.requestVoteDone = true;
         peer.lastAckEpoch = epoch;
-        assert(response.term() == currentTerm);
-        peer.currentTerm=currentTerm;
+        peer.currentTerm=response.term();
         stateChanged.notify_all();
 
         if (response.granted()) {

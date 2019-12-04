@@ -1326,20 +1326,6 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
     EXPECT_EQ(oldStartElectionAt, consensus->startElectionAt);
     EXPECT_EQ(0U, consensus->votedFor);
 
-
-    Protocol::Raft::AppendEntries::Request arequest;
-    Protocol::Raft::AppendEntries::Response aresponse;
-    arequest.set_server_id(3);
-    arequest.set_term(11);
-    arequest.set_prev_log_term(8);
-    arequest.set_prev_log_index(0);
-    arequest.set_commit_index(0);
-    consensus->handleAppendEntries(arequest, aresponse);
-    EXPECT_EQ("term: 11 "
-    "success: false "
-    "last_log_index: 0"
-    "server_capabilities: {}",
-    aresponse);
     
     // as candidate, log is ok
     request.set_last_log_term(9);
@@ -1350,6 +1336,40 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
               "log_ok: true",
               response);
     EXPECT_EQ(3U, consensus->votedFor);
+}
+
+
+TEST_F(ServerRaftConsensusTest, handleRequestVote_rejectVotesAfterHeartbeat)
+{
+init();
+Protocol::Raft::RequestVote::Request request;
+Protocol::Raft::RequestVote::Response response;
+request.set_server_id(3);
+request.set_term(12);
+request.set_last_log_term(1);
+request.set_last_log_index(2);
+
+consensus->stepDown(5);
+consensus->append({&entry5});
+consensus->startNewElection();
+EXPECT_EQ(State::CANDIDATE, consensus->state);
+Protocol::Raft::AppendEntries::Request arequest;
+Protocol::Raft::AppendEntries::Response aresponse;
+arequest.set_server_id(3);
+arequest.set_term(13);
+arequest.set_prev_log_term(8);
+arequest.set_prev_log_index(0);
+arequest.set_commit_index(0);
+consensus->handleAppendEntries(arequest, aresponse);
+
+// as candidate, log is ok
+request.set_last_log_term(9);
+consensus->handleRequestVote(request, response);
+EXPECT_EQ(State::FOLLOWER, consensus->state);
+EXPECT_EQ("term: 13 "
+"granted: false "
+"log_ok: true",
+response);
 }
 
 TEST_F(ServerRaftConsensusTest, handleRequestVote_termStale)
