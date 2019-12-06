@@ -1326,6 +1326,7 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
     EXPECT_EQ(oldStartElectionAt, consensus->startElectionAt);
     EXPECT_EQ(0U, consensus->votedFor);
 
+    
     // as candidate, log is ok
     request.set_last_log_term(9);
     consensus->handleRequestVote(request, response);
@@ -1335,6 +1336,40 @@ TEST_F(ServerRaftConsensusTest, handleRequestVote)
               "log_ok: true",
               response);
     EXPECT_EQ(3U, consensus->votedFor);
+}
+
+
+TEST_F(ServerRaftConsensusTest, handleRequestVote_rejectVotesAfterHeartbeat)
+{
+init();
+Protocol::Raft::RequestVote::Request request;
+Protocol::Raft::RequestVote::Response response;
+request.set_server_id(3);
+request.set_term(12);
+request.set_last_log_term(1);
+request.set_last_log_index(2);
+
+consensus->stepDown(5);
+consensus->append({&entry5});
+consensus->startNewElection();
+EXPECT_EQ(State::CANDIDATE, consensus->state);
+Protocol::Raft::AppendEntries::Request arequest;
+Protocol::Raft::AppendEntries::Response aresponse;
+arequest.set_server_id(3);
+arequest.set_term(13);
+arequest.set_prev_log_term(8);
+arequest.set_prev_log_index(0);
+arequest.set_commit_index(0);
+consensus->handleAppendEntries(arequest, aresponse);
+
+// as candidate, log is ok
+request.set_last_log_term(9);
+consensus->handleRequestVote(request, response);
+EXPECT_EQ(State::FOLLOWER, consensus->state);
+EXPECT_EQ("term: 13 "
+"granted: false "
+"log_ok: true",
+response);
 }
 
 TEST_F(ServerRaftConsensusTest, handleRequestVote_termStale)
@@ -1990,6 +2025,7 @@ TEST_F(ServerRaftConsensusPTest, peerThreadMain)
         "}");
     consensus->append({&entry5});
     std::shared_ptr<Peer> peer = getPeerRef(2);
+    
     consensus->stateChanged.callback = FollowerThreadMainHelper(*consensus,
                                                                 *peer);
     ++consensus->numPeerThreads;
@@ -2005,7 +2041,8 @@ TEST_F(ServerRaftConsensusPTest, peerThreadMain)
     vresponse.set_granted(true);
     peerService->reply(Protocol::Raft::OpCode::REQUEST_VOTE,
                        vrequest, vresponse);
-
+    
+    peer->currentTerm=consensus->currentTerm;
     // first appendEntries sends heartbeat (accept it)
     Protocol::Raft::AppendEntries::Request arequest;
     arequest.set_server_id(1);
@@ -2290,6 +2327,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_rpcFailed)
         {"Server/RaftConsensus.cc", "ERROR"}
     });
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_LT(Clock::now(), peer->backoffUntil);
     EXPECT_EQ(0U, peer->matchIndex);
@@ -2308,6 +2346,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_limitSizeAndIgnoreResult)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(0U, peer->matchIndex);
 }
@@ -2352,6 +2391,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_limitSizeRegression)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        r2, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(0U, peer->matchIndex);
 }
@@ -2364,6 +2404,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_suppressBulkData)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_FALSE(peer->suppressBulkData);
 }
@@ -2375,6 +2416,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_termChanged)
             request,
             std::make_shared<BumpTermAndReply>(*consensus, response));
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(TimePoint::min(), peer->backoffUntil);
     EXPECT_EQ(0U, peer->matchIndex);
@@ -2388,6 +2430,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_termStale)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(0U, peer->matchIndex);
     EXPECT_EQ(State::FOLLOWER, consensus->state);
@@ -2399,6 +2442,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_ok)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(consensus->currentEpoch, peer->lastAckEpoch);
     EXPECT_EQ(4U, peer->matchIndex);
@@ -2422,6 +2466,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_mismatch)
     response.set_last_log_index(300);
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_EQ(4U, peer->nextIndex);
 
@@ -2442,6 +2487,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_serverCapabilities)
     peerService->reply(Protocol::Raft::OpCode::APPEND_ENTRIES,
                        request, response);
     std::unique_lock<Mutex> lockGuard(consensus->mutex);
+    peer->currentTerm=consensus->currentTerm;
     consensus->appendEntries(lockGuard, *peer);
     EXPECT_TRUE(peer->haveStateMachineSupportedVersions);
     EXPECT_EQ(10U, peer->minStateMachineVersion);
@@ -2457,6 +2503,7 @@ TEST_F(ServerRaftConsensusPATest, appendEntries_snapshot)
     consensus->log->truncatePrefix(2);
     EXPECT_EQ(2U, consensus->log->getLogStartIndex());
     peer->nextIndex = 1;
+    peer->currentTerm = consensus->currentTerm;
     EXPECT_DEATH(consensus->appendEntries(lockGuard, *peer),
                  "Could not open .*snapshot");
 

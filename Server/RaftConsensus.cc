@@ -108,6 +108,12 @@ LocalServer::getLastAckEpoch() const
 }
 
 uint64_t
+LocalServer::getLastTerm() const
+{
+    return consensus.currentTerm;
+}
+
+uint64_t
 LocalServer::getMatchIndex() const
 {
     return lastSyncedIndex;
@@ -175,6 +181,7 @@ Peer::Peer(uint64_t serverId, RaftConsensus& consensus)
     , nextIndex(consensus.log->getLastLogIndex() + 1)
     , matchIndex(0)
     , lastAckEpoch(0)
+    , currentTerm(0)
     , nextHeartbeatTime(TimePoint::min())
     , backoffUntil(TimePoint::min())
     , rpcFailuresSinceLastWarning(0)
@@ -231,6 +238,14 @@ Peer::getLastAckEpoch() const
 {
     return lastAckEpoch;
 }
+
+
+uint64_t
+Peer::getLastTerm() const
+{
+    return currentTerm;
+}
+
 
 uint64_t
 Peer::getMatchIndex() const
@@ -1319,7 +1334,7 @@ RaftConsensus::handleAppendEntries(
     stepDown(request.term());
     setElectionTimer();
     withholdVotesUntil = Clock::now() + ELECTION_TIMEOUT;
-
+    std::cout<<"appendentries++++++++++withholdVotesUntil:"<<withholdVotesUntil<<std::endl;
     // Record the leader ID as a hint for clients.
     if (leaderId == 0) {
         leaderId = request.server_id();
@@ -1559,8 +1574,12 @@ RaftConsensus::handleRequestVote(
     bool logIsOk = (request.last_log_term() > lastLogTerm ||
                     (request.last_log_term() == lastLogTerm &&
                      request.last_log_index() >= lastLogIndex));
-
+    std::cout<<"++++++++++withholdVotesUntil:"<<withholdVotesUntil<<std::endl;
+    std::cout<<"++++++++++now: "<<Clock::now()<<std::endl;
+    std::cout<<"currentTerm:"<<currentTerm<<std::endl;
     if (withholdVotesUntil > Clock::now()) {
+        std::cout<<"true "<<std::endl;
+        std::cout<<"currentTerm:"<<currentTerm<<std::endl;
         NOTICE("Rejecting RequestVote for term %lu from server %lu, since "
                "this server (which is in term %lu) recently heard from a "
                "leader (%lu). Should server %lu be shut down?",
@@ -2301,6 +2320,11 @@ RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
         return;
     }
 
+    if (configuration->quorumMin(&Server::getLastTerm) < currentTerm-2){
+        stepDown(currentTerm);
+        return;
+    }
+
     // Find prevLogTerm or fall back to sending a snapshot.
     uint64_t prevLogTerm;
     if (prevLogIndex >= log->getLogStartIndex()) {
@@ -2363,6 +2387,7 @@ RaftConsensus::appendEntries(std::unique_lock<Mutex>& lockGuard,
     } else {
         assert(response.term() == currentTerm);
         peer.lastAckEpoch = epoch;
+        peer.currentTerm = currentTerm;
         stateChanged.notify_all();
         peer.nextHeartbeatTime = start + HEARTBEAT_PERIOD;
         if (response.success()) {
@@ -2504,6 +2529,7 @@ RaftConsensus::installSnapshot(std::unique_lock<Mutex>& lockGuard,
     } else {
         assert(response.term() == currentTerm);
         peer.lastAckEpoch = epoch;
+        peer.currentTerm=currentTerm;
         stateChanged.notify_all();
         peer.nextHeartbeatTime = start + HEARTBEAT_PERIOD;
         peer.suppressBulkData = false;
@@ -2611,6 +2637,7 @@ RaftConsensus::getLastLogTerm() const
         return lastSnapshotTerm;
     }
 }
+
 
 void
 RaftConsensus::interruptAll()
@@ -2864,6 +2891,7 @@ RaftConsensus::requestVote(std::unique_lock<Mutex>& lockGuard, Peer& peer)
     } else {
         peer.requestVoteDone = true;
         peer.lastAckEpoch = epoch;
+        peer.currentTerm=response.term();
         stateChanged.notify_all();
 
         if (response.granted()) {
@@ -3115,3 +3143,4 @@ operator<<(std::ostream& os, RaftConsensus::State state)
 
 } // namespace LogCabin::Server
 } // namespace LogCabin
+
