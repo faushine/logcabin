@@ -36,6 +36,12 @@
 #include <LogCabin/Debug.h>
 #include <LogCabin/Util.h>
 
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 namespace {
 
 using LogCabin::Client::Cluster;
@@ -209,6 +215,13 @@ class OptionParser {
  * \param[out] writesDone
  *      The number of writes this thread has completed.
  */
+    long printTimeElapsedCs(struct timespec tp_start, struct timespec tp_end, std::string msg) {
+        long time_elapsed_sec = (tp_end.tv_sec - tp_start.tv_sec);
+        long time_elapsed_nsec = (tp_end.tv_nsec - tp_start.tv_nsec);
+        std::cout<<"========"<<msg+":::::"<<(time_elapsed_nsec/1000)<<" us ========"<<std::endl;
+        return time_elapsed_nsec/1000;
+    }
+
 void
 writeThreadMain(uint64_t id,
                 const OptionParser& options,
@@ -218,6 +231,16 @@ writeThreadMain(uint64_t id,
                 std::atomic<bool>& exit,
                 uint64_t& writesDone)
 {
+    struct timespec tp_start, tp_end;
+    long time_elapsed_sec;
+    long time_elapsed_nsec;
+    clockid_t clk_id = CLOCK_MONOTONIC;
+    // write new result to file
+//    std::string filename = "result/read_old.dat";
+//    std::cout<<"========"+filename+"========"<<std::endl;
+//    std::ofstream file;
+//    file.open(filename, std::ios_base::app);
+
     uint64_t numWrites = options.totalWrites / options.writers;
     // assign any odd leftover writes in a balanced way
     if (options.totalWrites - numWrites * options.writers > id)
@@ -227,7 +250,13 @@ writeThreadMain(uint64_t id,
             break;
         tree.writeEx(key, value);
         writesDone = i + 1;
+//        clock_gettime(clk_id, &tp_start);
+        std::string contents = tree.readEx(key);
+//        clock_gettime(clk_id, &tp_end);
+//        long readTime = printTimeElapsedCs(tp_start, tp_end, "readTime");
+//        file<<readTime<<"\n";
     }
+//    file.close();
 }
 
 /**

@@ -23,6 +23,11 @@
 #include "RPC/ClientRPC.h"
 #include "Protocol/Common.h"
 #include "RPC/ClientSession.h"
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #ifndef LOGCABIN_SERVER_CLIENTSERVICE_H
 #define LOGCABIN_SERVER_CLIENTSERVICE_H

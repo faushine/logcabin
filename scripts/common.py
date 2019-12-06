@@ -81,6 +81,8 @@ class Sandbox(object):
             sh_command = ['ssh', host,
                           '%s/regexec' % scripts_path, sonce,
                           os.getcwd(), "'%s'" % command]
+            # sh_command = ['docker run -it --privileged -v /Users/faushine/Documents/logcabin:/logcabin logcabin:latest bash']
+            print(sh_command)
             p = subprocess.Popen(sh_command, **kwargs)
             process = self.Process(host, command, kwargs, sonce,
                                    p, ignoreFailures)

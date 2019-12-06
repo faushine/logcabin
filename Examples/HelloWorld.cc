@@ -180,25 +180,27 @@ main(int argc, char** argv)
         clockid_t clk_id = CLOCK_MONOTONIC;
 
         //---------write
-//        NOTICE("############ client start write ##############");
-//        clock_gettime(clk_id, &tp_start);
-//        tree.writeEx("/etc/passwd", "ha");
-//        NOTICE("############ client end write ##############");
+        NOTICE("############ client start write ##############");
+        clock_gettime(clk_id, &tp_start);
+        tree.writeEx("/etc/passwd", "ha");
+        tree.writeEx("/etc/passw", "ha");
+        tree.writeEx("/etc/pass", "ha");
+        NOTICE("############ client end write ##############");
         //---------write
 
         //---------read
-        NOTICE("############ client start read ##############");
-
-        clock_gettime(clk_id, &tp_start);
-
-        std::string contents = tree.readEx("/etc/passwd");
-
-        clock_gettime(clk_id, &tp_end);
-
-        NOTICE("############ client end read ##############");
+//        NOTICE("############ client start read ##############");
+//
+//        clock_gettime(clk_id, &tp_start);
+//
+//        std::string contents = tree.readEx("/etc/passwd");
+//
+//        clock_gettime(clk_id, &tp_end);
+//
+//        NOTICE("############ client end read ##############");
         //--------read
 //
-        assert(contents == "ha");
+//        assert(contents == "ha");
 //        tree.removeDirectoryEx("/etc");
         return 0;
 
